@@ -1,7 +1,7 @@
 import userModel from "../models/user.model.js";
 import config from "../config/config.js";
 import jwt from "jsonwebtoken";
-
+import bcrypt from "bcryptjs";
 // Register controller
 
 export const registerUser = async (req, res) => {
@@ -14,7 +14,11 @@ export const registerUser = async (req, res) => {
   }
 
   try {
-    const user = await userModel.create({ name, email, password });
+    const user = await userModel.create({
+      name,
+      email,
+      password: await bcrypt.hash(password, 10),
+    });
 
     const token = jwt.sign(
       {
@@ -39,24 +43,62 @@ export const registerUser = async (req, res) => {
   }
 };
 
+// Login user
 
-// Get Me router 
+export const loginUser = async (req, res) => {
+  const { email, password } = req.body;
 
-export const getMe = async (req , res )=>{
-  const authHeader = req.headers.authorization;
+  // Check if email and password Provided
 
-  console.log(authHeader);
+  if (!email || !password) {
+    return res.status(400).json({
+      message: "Email and Password are required",
+    });
+  }
 
-  const data = jwt.decode(authHeader);
+  try {
+    // Find the user
 
-  console.log(data);
+    const user = await userModel.findOne({ email });
 
-  const user = await userModel.findById(data.id);
+    const isValidPassword = bcrypt.compare(password, user.password);
 
-  console.log(user);
-  
-  
+    if (!user || !isValidPassword) {
+      return res.status(400).json({
+        message: "Invalid user and Password..",
+      });
+    }
 
+    const token = jwt.sign(
+      {
+        id: user._id,
+      },
+      config.JWT_SECRET,
+    );
 
-  
-}
+    return res.status(200).json(
+      {
+        message: "User Loggin successfully .",
+        data: {
+          user: {
+            email: user.email,
+            name: user.name,
+          },
+        },
+      },
+      token,
+    );
+  } catch (error) {
+    // return res.status()
+  }
+};
+
+// Get Me router
+
+export const getMe = async (req, res) => {
+  console.log(req.user);
+
+  return res.status(200).json({
+    user: req.user,
+  });
+};
