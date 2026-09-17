@@ -1,25 +1,58 @@
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
 import userModel from "../models/user.model.js";
-import config from "../config/config.js"
-
-export const authenticate = async (req , res , next)=>{
-
-    const token = req.headers.authorization;
+import config from "../config/config.js";
 
 
-    if(!token){
-       return res.status(401).json({
-        message : "Token Not Found "
-       })
+
+// Middleware to verify access token 
+ 
+export const authenticate = async (req, res, next) => {
+  try {
+
+    // Get token from header 
+
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        message: "Authorization token required",
+      });
     }
 
-    const data = jwt.verify(token ,config.JWT_SECRET);
 
-    const user = await userModel.findById(data.id);
+    // Extract token and verify
 
-    req.user = user 
-  
-    next()
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, config.ACCESS_SECRET);
+
+    // Check if user exists 
+
+    const user = await userModel.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({
+        message: "User no longer exists",
+      });
+    }
 
 
-}
+    // Attach user to request and proceed
+
+    req.user = user;
+    next();
+    
+  } catch (error) { 
+
+    // Handle token expiration
+    
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        message: "Access token has expired",
+        code: "TOKEN_EXPIRED",
+      });
+    }
+
+    return res.status(401).json({
+      message: "Invalid token",
+    });
+  }
+};
