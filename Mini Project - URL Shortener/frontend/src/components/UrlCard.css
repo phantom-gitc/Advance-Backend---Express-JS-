@@ -1,0 +1,277 @@
+.url-card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  padding: 20px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all 0.3s var(--ease-spring);
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.4);
+}
+
+.url-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+  box-shadow: 0 14px 34px -8px rgba(0, 0, 0, 0.6);
+}
+
+.card-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon-btn {
+  background: var(--bg-pill);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.icon-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+  background: var(--bg-pill-hover);
+}
+
+.icon-btn.is-spinning svg {
+  animation: spin 0.8s linear infinite;
+}
+
+/* delete flips to coral on first tap asking for confirm */
+.delete-btn.is-confirm {
+  background: rgba(255, 59, 92, 0.12);
+  border-color: rgba(255, 59, 92, 0.45);
+  color: var(--accent-coral);
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  30% { transform: translateX(-3px); }
+  70% { transform: translateX(3px); }
+}
+
+.domain-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-pill);
+  border: 1px solid var(--border-subtle);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.domain-favicon {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.domain-name {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.clicks-pill-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.clicks-badge {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  background: var(--accent-violet-dim);
+  border: 1px solid rgba(138, 79, 255, 0.25);
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: #cbb4ff;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+.clicks-count {
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+.clicks-text {
+  font-size: 0.68rem;
+  opacity: 0.8;
+}
+
+.refresh-btn {
+  background: var(--bg-pill);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refresh-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+  background: var(--bg-pill-hover);
+}
+
+.refresh-btn.is-spinning svg {
+  animation: spin 0.8s linear infinite;
+}
+
+.card-mid-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.short-url-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  cursor: pointer;
+  width: fit-content;
+  padding: 2px 6px;
+  margin-left: -6px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.short-url-display:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.short-prefix {
+  color: var(--text-muted);
+}
+
+.short-code {
+  color: var(--accent-lime);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.copy-pill {
+  font-size: 0.65rem;
+  padding: 2px 7px;
+  background: var(--bg-pill);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.short-url-display:hover .copy-pill {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.copy-pill.is-copied {
+  background: var(--accent-lime);
+  color: #000;
+  border-color: var(--accent-lime);
+  font-weight: 700;
+}
+
+.original-url-text {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.card-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.card-date {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.card-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn.copy-action {
+  background: var(--bg-pill);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.action-btn.copy-action:hover {
+  background: var(--bg-pill-hover);
+  color: #fff;
+  border-color: var(--border-hover);
+}
+
+.action-btn.copy-action.is-copied {
+  background: var(--accent-lime);
+  color: #000;
+  border-color: var(--accent-lime);
+}
+
+.action-btn.visit-action {
+  background: rgba(0, 242, 254, 0.1);
+  border: 1px solid rgba(0, 242, 254, 0.25);
+  color: var(--accent-cyan);
+}
+
+.action-btn.visit-action:hover {
+  background: rgba(0, 242, 254, 0.2);
+  border-color: var(--accent-cyan);
+}
