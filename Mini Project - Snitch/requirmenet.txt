@@ -1,0 +1,13 @@
+## Functional Requirements
+
+1. User can see all the products.
+2. User can add any product into the cart.
+3. A user can have one cart at any moment of the time.
+4. Adding the same product into the cart increases the quantity instead of adding another entry for the same product.
+5. User will add the product with Size (e.g. XS, S, M, L, XL, XXL) into the cart.
+6. If any size is currently out of stock, show that size to the user but label it **Unavailable**.
+7. Seller can unlist any product.
+8. A seller can list all the products on the dashboard.
+9. In the cart, store the reference of the product with size and quantity, **not the entire copy of the product**.
+10.If a user request to the seller API , response status 403 
+11. If a guest user request in a protected API , Then Return the 401 Status Code 

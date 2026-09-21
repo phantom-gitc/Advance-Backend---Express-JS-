@@ -1,0 +1,7 @@
+## Out of Scope
+
+1. Live Tracking of the Order.
+2. Payment Gateway Integration.
+3. Refund Policy.
+4. Customer Support.
+5. Return Feature.
