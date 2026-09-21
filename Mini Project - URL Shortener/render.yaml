@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: url-shortener-backend
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/url/getUrls
+    envVars:
+      - key: NODE_ENV
+        value: production
