@@ -11,10 +11,6 @@ if(!process.env.MONGODB_URL){
     throw new Error("MONGODB_URL is not defined ❌");
 }
 
-if(!process.env.JWT_SECRET){
-    throw new Error("JWT_SECRET is not defined ❌");
-}
-
 if(!process.env.ACCESS_TOKEN_SECRET){
     throw new Error("ACCESS_TOKEN_SECRET is not defined ❌");
 }
@@ -28,8 +24,8 @@ if(!process.env.REFRESH_TOKEN_SECRET){
 const Config = {
     PORT: process.env.PORT,
     MONGODB_URL: process.env.MONGODB_URL,
-    JWT_SECRET: process.env.JWT_SECRET,
-    JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
+    ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
+    REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
 }
 
 export default Config;

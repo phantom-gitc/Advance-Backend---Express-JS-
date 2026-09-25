@@ -1,6 +1,6 @@
-import app from "./app/app.js";
-import connectDB from "./config/database.js";
-import Config from "./config/config.js";
+import app from "./src/app/app.js";
+import connectDB from "./src/config/database.js";
+import Config from "./src/config/config.js";
 
 await connectDB();
 
@@ -8,3 +8,4 @@ await connectDB();
 app.listen(Config.PORT,()=>{
     console.log("Server is running on port",Config.PORT,"✅");
 });
+
