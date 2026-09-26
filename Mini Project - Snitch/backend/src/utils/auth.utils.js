@@ -21,7 +21,8 @@ function createAccessToken({ userId, role }) {
 // refresh token creation logic
 
 
-function createRefreshToken(userId) {
+function createRefreshToken(data) {
+    const userId = typeof data === "object" && data !== null ? (data.userId || data.id) : data;
     const refreshToken = jwt.sign({
         id: userId,
     }, Config.REFRESH_TOKEN_SECRET, {
@@ -31,7 +32,28 @@ function createRefreshToken(userId) {
     return refreshToken;
 }
 
+
+
+// Read Refresh Token   
+
+
+function readRefreshToken(refreshToken){
+    try {
+        
+        return jwt.verify(refreshToken , Config.REFRESH_TOKEN_SECRET)
+        
+    } catch (error) {
+        console.log(error)
+        return null
+    }
+}    
+
 export {
     createAccessToken,
-    createRefreshToken
+    createRefreshToken,
+    readRefreshToken
 }
+
+
+
+
