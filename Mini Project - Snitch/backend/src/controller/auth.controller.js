@@ -156,22 +156,10 @@ export const loginController = async (req , res) =>{
 }
 
 
-/**
- * Refresh Controller
- * 
- * Purpose:
- * When a user's 15-minute access token expires, the client hits this endpoint
- * using their HTTP-only refresh token cookie to get a new access token without logging in again.
- * 
- * How it works:
- * 1. Grab the refresh token from req.cookies.
- * 2. Verify the JWT signature & expiry.
- * 3. Find the user in DB and compare the token against the stored bcrypt hash.
- * 4. If someone uses an invalid or old token (reuse/theft attack), immediately
- *    reset refreshToken to null in DB, wipe the cookie, and kick them out.
- * 5. If valid, rotate credentials: issue a new access token + new refresh token,
- *    hash the new refresh token in DB, set the new cookie, and return the access token.
- */
+
+// Refresh Controller
+
+
 export const refreshController = async (req, res) => {
   const { refreshToken } = req.cookies || {};
 
@@ -259,6 +247,42 @@ export const refreshController = async (req, res) => {
       message: "Token refreshed successfully",
       data: {
         accessToken: newAccessToken,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+export const getMe = async (req, res) => {
+  try {
+    const { userId } = req.user;
+
+    const user = await userModel.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found ❌",
+        error: [
+          {
+            field: "user",
+            message: "User not found",
+          },
+        ],
+      });
+    }
+
+    return res.status(200).json({
+      message: "User found successfully",
+      data: {
+        user: {
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
       },
     });
   } catch (error) {

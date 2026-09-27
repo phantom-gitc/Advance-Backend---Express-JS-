@@ -48,10 +48,23 @@ function readRefreshToken(refreshToken){
     }
 }    
 
+
+// Read Access Token   
+
+
+function readAccessToken(accessToken){
+    try {
+        return jwt.verify(accessToken , Config.ACCESS_TOKEN_SECRET)
+    } catch (error) {
+        return null
+    }
+}   
+
 export {
     createAccessToken,
     createRefreshToken,
-    readRefreshToken
+    readRefreshToken,
+    readAccessToken,
 }
 
 
