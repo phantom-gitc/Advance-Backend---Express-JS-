@@ -1,12 +1,15 @@
 import express from "express";
 import userModel from "../models/user.model.js";
 import bcrypt from "bcrypt";
-import { createAccessToken, createRefreshToken, readRefreshToken } from "../utils/auth.utils.js";
+import {
+  createAccessToken,
+  createRefreshToken,
+  readRefreshToken,
+} from "../utils/auth.utils.js";
 import jwt from "jsonwebtoken";
 import Config from "../config/config.js";
 
-
-// Register controller 
+// Register controller
 
 export const registerController = async (req, res) => {
   // Destructure the request body
@@ -41,9 +44,9 @@ export const registerController = async (req, res) => {
       role,
     });
 
-    // Generate Token 
-    const accessToken = createAccessToken({ userId: user._id, role });
-    const refreshToken = createRefreshToken({ userId: user._id, role });
+    // Generate Token
+    const accessToken = createAccessToken({ userId: user._id, role: user.role });
+    const refreshToken = createRefreshToken({ userId: user._id, role: user.role });
 
     // Hash refresh token before saving to database
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
@@ -51,8 +54,8 @@ export const registerController = async (req, res) => {
     // set refresh token in cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
@@ -84,25 +87,23 @@ export const registerController = async (req, res) => {
   }
 };
 
-
 // Login controller
 
-export const loginController = async (req , res) =>{
-  
-  const {email , password , } = req.body || {}
+export const loginController = async (req, res) => {
+  const { email, password } = req.body || {};
 
-  const user = await userModel.findOne({email})
+  const user = await userModel.findOne({ email });
 
-  if(!user) {
+  if (!user) {
     return res.status(400).json({
-      message : "Invalid Email or Password ❌",
-      error : [
+      message: "Invalid Email or Password ❌",
+      error: [
         {
-          field : "email",
-          message : "Email not found"
-        }
-      ]
-    })
+          field: "email",
+          message: "Email not found",
+        },
+      ],
+    });
   }
 
   // compare password
@@ -111,21 +112,24 @@ export const loginController = async (req , res) =>{
 
   // if password is not valid
 
-  if(!isPasswordValid){
+  if (!isPasswordValid) {
     return res.status(400).json({
-      message : "Invalid Email or Password ❌",
-      error : [
+      message: "Invalid Email or Password ❌",
+      error: [
         {
-          field : "password",
-          message : "Invalid password"
-        }
-      ]
-    })
+          field: "password",
+          message: "Invalid password",
+        },
+      ],
+    });
   }
 
   // generate token
-  const accessToken = createAccessToken({userId : user._id , role : user.role})
-  const refreshToken = createRefreshToken({userId : user._id , role : user.role})
+  const accessToken = createAccessToken({ userId: user._id, role: user.role });
+  const refreshToken = createRefreshToken({
+    userId: user._id,
+    role: user.role,
+  });
 
   // hash refresh token before saving to database
   const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
@@ -134,34 +138,33 @@ export const loginController = async (req , res) =>{
     refreshToken: hashedRefreshToken,
   });
 
-  res.cookie("refreshToken" , refreshToken , {
-    httpOnly : true,
-    secure : true,
-    sameSite : "strict",
-    maxAge : 1000 * 60 * 60 * 24 * 7,
-  })
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+    maxAge: 1000 * 60 * 60 * 24 * 7,
+  });
 
   return res.status(200).json({
-    message : "User logged in successfully",
-    data : {
-      user : {
-        id : user._id,
-        email : user.email,
-        name : user.name,
-        role : user.role,
+    message: "User logged in successfully",
+    data: {
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
       },
-      accessToken : accessToken,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
     },
-  })
-}
-
-
+  });
+};
 
 // Refresh Controller
 
-
 export const refreshController = async (req, res) => {
-  const { refreshToken } = req.cookies || {};
+
+  const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
   if (!refreshToken) {
     return res.status(401).json({
@@ -169,7 +172,8 @@ export const refreshController = async (req, res) => {
       error: [
         {
           field: "refreshToken",
-          message: "Refresh token not found",
+          message: "Refresh token not found in cookies or body",
+
         },
       ],
     });
@@ -190,7 +194,9 @@ export const refreshController = async (req, res) => {
       });
     }
 
-    const userId = decodeToken.id?.userId || decodeToken.id || decodeToken.userId;
+    const userId =
+      decodeToken.id?.userId || decodeToken.id || decodeToken.userId;
+
     const user = await userModel.findById(userId);
 
     if (!user || !user.refreshToken) {
@@ -205,9 +211,13 @@ export const refreshController = async (req, res) => {
       });
     }
 
-    const isTokenMatching = await bcrypt.compare(refreshToken, user.refreshToken);
+    const isTokenMatching = await bcrypt.compare(
+      refreshToken,
+      user.refreshToken,
+    );
 
     if (!isTokenMatching) {
+
       await userModel.findByIdAndUpdate(user._id, { refreshToken: null });
 
       res.clearCookie("refreshToken", {
@@ -221,14 +231,21 @@ export const refreshController = async (req, res) => {
         error: [
           {
             field: "refreshToken",
-            message: "Suspicious activity detected. Session revoked. Please log in again.",
+            message:
+              "Suspicious activity detected. Session revoked. Please log in again.",
           },
         ],
       });
     }
 
-    const newAccessToken = createAccessToken({ userId: user._id, role: user.role });
-    const newRefreshToken = createRefreshToken({ userId: user._id, role: user.role });
+    const newAccessToken = createAccessToken({
+      userId: user._id,
+      role: user.role,
+    });
+    const newRefreshToken = createRefreshToken({
+      userId: user._id,
+      role: user.role,
+    });
 
     const hashedNewRefreshToken = await bcrypt.hash(newRefreshToken, 10);
 
@@ -238,8 +255,8 @@ export const refreshController = async (req, res) => {
 
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
@@ -247,6 +264,7 @@ export const refreshController = async (req, res) => {
       message: "Token refreshed successfully",
       data: {
         accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
       },
     });
   } catch (error) {
@@ -255,6 +273,7 @@ export const refreshController = async (req, res) => {
   }
 };
 
+// GetMe 
 
 export const getMe = async (req, res) => {
   try {
@@ -290,3 +309,6 @@ export const getMe = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+
