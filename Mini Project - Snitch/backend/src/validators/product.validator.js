@@ -1,6 +1,7 @@
 import { body, validationResult } from "express-validator";
 
 // Validator for creating a new product
+
 export const createProductValidator = [
     body("title")
         .trim()
@@ -70,13 +71,20 @@ export const createProductValidator = [
             if (images.length > 5) {
                 throw new Error("A maximum of 5 images can be stored");
             }
-            if (!images.every((img) => typeof img === "string" && img.trim().length > 0)) {
-                throw new Error("Each image must be a valid non-empty string URL");
+            if (
+                !images.every(
+                    (img) =>
+                        (typeof img === "string" && img.trim().length > 0) ||
+                        (typeof img === "object" && img !== null && (img.buffer || img.originalname))
+                )
+            ) {
+                throw new Error("Each image must be a valid image file or non-empty string URL");
             }
             return true;
         }),
 
     // Validation result handler middleware
+
     (req, res, next) => {
         const errors = validationResult(req);
 
@@ -92,6 +100,7 @@ export const createProductValidator = [
 ];
 
 // Validator for updating a product (all fields optional)
+
 export const updateProductValidator = [
     body("title")
         .optional()
@@ -144,13 +153,20 @@ export const updateProductValidator = [
             if (images.length > 5) {
                 throw new Error("A maximum of 5 images can be stored");
             }
-            if (!images.every((img) => typeof img === "string" && img.trim().length > 0)) {
-                throw new Error("Each image must be a valid non-empty string URL");
+            if (
+                !images.every(
+                    (img) =>
+                        (typeof img === "string" && img.trim().length > 0) ||
+                        (typeof img === "object" && img !== null && (img.buffer || img.originalname))
+                )
+            ) {
+                throw new Error("Each image must be a valid image file or non-empty string URL");
             }
             return true;
         }),
 
     // Validation result handler middleware
+
     (req, res, next) => {
         const errors = validationResult(req);
 
