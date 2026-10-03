@@ -17,9 +17,11 @@ export const registerController = async (req, res) => {
 
   try {
     // Check if user already exists
+
     const isUserAlreadyExist = await userModel.findOne({ email });
 
     // if user already exists, return error
+
     if (isUserAlreadyExist) {
       return res.status(400).json({
         message: "User already exists with this email address ❌",
@@ -45,8 +47,14 @@ export const registerController = async (req, res) => {
     });
 
     // Generate Token
-    const accessToken = createAccessToken({ userId: user._id, role: user.role });
-    const refreshToken = createRefreshToken({ userId: user._id, role: user.role });
+    const accessToken = createAccessToken({
+      userId: user._id,
+      role: user.role,
+    });
+    const refreshToken = createRefreshToken({
+      userId: user._id,
+      role: user.role,
+    });
 
     // Hash refresh token before saving to database
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
@@ -163,7 +171,6 @@ export const loginController = async (req, res) => {
 // Refresh Controller
 
 export const refreshController = async (req, res) => {
-
   const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
   if (!refreshToken) {
@@ -173,7 +180,6 @@ export const refreshController = async (req, res) => {
         {
           field: "refreshToken",
           message: "Refresh token not found in cookies or body",
-
         },
       ],
     });
@@ -217,7 +223,6 @@ export const refreshController = async (req, res) => {
     );
 
     if (!isTokenMatching) {
-
       await userModel.findByIdAndUpdate(user._id, { refreshToken: null });
 
       res.clearCookie("refreshToken", {
@@ -273,7 +278,7 @@ export const refreshController = async (req, res) => {
   }
 };
 
-// GetMe 
+// GetMe
 
 export const getMe = async (req, res) => {
   try {
@@ -309,6 +314,3 @@ export const getMe = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
-

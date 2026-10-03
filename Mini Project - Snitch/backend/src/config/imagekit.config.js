@@ -7,18 +7,7 @@ const imagekit = new ImageKit({
     urlEndpoint: Config.IMAGEKIT_URL_ENDPOINT || "",
 });
 
-export const uploadToImageKit = async (file, folder = "/products") => {
-    if (!Config.IMAGEKIT_PUBLIC_KEY || !Config.IMAGEKIT_PRIVATE_KEY || !Config.IMAGEKIT_URL_ENDPOINT) {
-        throw new Error("ImageKit credentials are not configured in .env");
-    }
-
-    const response = await imagekit.upload({
-        file: file.buffer.toString("base64"),
-        fileName: `${Date.now()}-${file.originalname}`,
-        folder: folder,
-    });
-
-    return response.url;
-};
+// Re-export upload helper from service for convenience
+export { uploadToImageKit } from "../services/imageKit.service.js";
 
 export default imagekit;

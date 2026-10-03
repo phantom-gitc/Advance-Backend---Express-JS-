@@ -1,5 +1,8 @@
 import productModel from "../models/product.model.js";
-import { uploadToImageKit } from "../config/imagekit.config.js";
+import { uploadToImageKit } from "../services/imageKit.service.js";
+
+
+// Create a product 
 
 export const createProduct = async (req, res) => {
     try {
@@ -15,6 +18,7 @@ export const createProduct = async (req, res) => {
         }
 
         // Upload images to ImageKit
+
         let imageUrls = [];
         if (files.length > 0) {
             imageUrls = await Promise.all(
@@ -23,6 +27,7 @@ export const createProduct = async (req, res) => {
         }
 
         // If string URLs were passed in body (e.g. from JSON payload), include them
+        
         if (Array.isArray(req.body.images)) {
             imageUrls = [...imageUrls, ...req.body.images];
         }
@@ -60,3 +65,31 @@ export const createProduct = async (req, res) => {
         });
     }
 };
+
+
+// Get all the products from the DB
+
+export const getAllProducts = async ( req , res) =>{
+    try {
+        
+        const products = await productModel.find()
+
+        if(!products){
+            return res.status(404).json({
+                success: false,
+                message: "No products found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Products fetched successfully",
+            products,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Internal server error while fetching products",
+        });
+    }
+}
