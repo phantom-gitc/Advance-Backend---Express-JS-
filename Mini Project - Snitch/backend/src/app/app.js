@@ -1,6 +1,7 @@
 import express from "express";
 import authRoutes from "../routes/auth.routes.js";
 import productRoutes from "../routes/product.routes.js";
+import cartRoutes from "../routes/cart.routes.js";
 import cookieParser from "cookie-parser";
 
 
@@ -26,10 +27,10 @@ app.get("/health", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/cart", cartRoutes);
 
 
-// Fallback 404 handler in JSON format
-
+// Fallback 404 handler in JSON format 
 
 app.use((req, res) => {
     res.status(404).json({
