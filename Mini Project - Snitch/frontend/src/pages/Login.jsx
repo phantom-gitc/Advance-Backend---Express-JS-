@@ -98,7 +98,7 @@ export const Login = () => {
 
           {/* Bottom Left: Curated Lookbook Specs */}
           <div className="relative z-10 pt-4 border-t border-white/15 flex items-center justify-between text-[10px] font-hanken uppercase tracking-widest text-neutral-400">
-            <span>Archival Edition 2024</span>
+            <span>Archival Edition 2026</span>
             <div className="flex items-center gap-4">
               <span>Runs Under 300 Units</span>
               <span>•</span>

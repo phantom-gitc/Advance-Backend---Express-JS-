@@ -112,7 +112,7 @@ export const Register = () => {
 
           {/* Bottom Left: Curated Lookbook Specs */}
           <div className="relative z-10 pt-4 border-t border-white/15 flex items-center justify-between text-[10px] font-hanken uppercase tracking-widest text-neutral-400">
-            <span>Client Key #ATC-2024</span>
+            <span>Client Key #ATC-2026</span>
             <div className="flex items-center gap-4">
               <span>Encrypted Pass</span>
               <span>•</span>

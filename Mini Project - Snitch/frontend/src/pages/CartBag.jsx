@@ -255,7 +255,7 @@ export const CartBag = () => {
                     <div className="flex items-center gap-2 mt-1 font-hanken text-xs text-neutral-500">
                       <span>Size: <strong className="text-black">{item.size}</strong></span>
                       <span>•</span>
-                      <span>Edition 2024</span>
+                      <span>Edition 2026</span>
                     </div>
                   </div>
 
