@@ -56,3 +56,25 @@ export function authorizeSeller(req, res, next) {
   }
   next();
 }
+
+// Optional authentication middleware: populates req.user if token present, but does not block guests
+export function optionalAuthenticate(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization || req.headers.token;
+    const tokenFromHeader = authHeader?.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : authHeader;
+    const accessToken = req.cookies?.accessToken || tokenFromHeader;
+
+    if (accessToken) {
+      const decodeToken = readAccessToken(accessToken);
+      if (decodeToken) {
+        const { id: userId, role } = decodeToken;
+        req.user = { userId, role };
+      }
+    }
+    next();
+  } catch (error) {
+    next();
+  }
+}

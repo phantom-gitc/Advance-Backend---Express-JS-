@@ -62,6 +62,18 @@ export const createProductValidator = [
         .withMessage("Stock must be an integer between 0 and 1,000")
         .toInt(),
 
+    body("category")
+        .optional()
+        .trim()
+        .isString()
+        .withMessage("Category must be a string"),
+
+    body("subCategory")
+        .optional()
+        .trim()
+        .isString()
+        .withMessage("Subcategory must be a string"),
+
     body("images")
         .optional()
         .isArray()

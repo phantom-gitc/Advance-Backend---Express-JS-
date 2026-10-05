@@ -54,7 +54,7 @@ const cartSchema = new mongoose.Schema(
 
 // Automatically update totalPrice before saving the cart
 
-cartSchema.pre("save", function (next) {
+cartSchema.pre("save", function () {
     if (this.products && this.products.length > 0) {
         this.totalPrice = this.products.reduce(
             (total, item) => total + (item.price * item.quantity),
@@ -63,7 +63,6 @@ cartSchema.pre("save", function (next) {
     } else {
         this.totalPrice = 0;
     }
-    next();
 });
 
 const cartModel = mongoose.model("cart", cartSchema);

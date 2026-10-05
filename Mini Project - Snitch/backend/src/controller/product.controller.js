@@ -1,13 +1,14 @@
 import mongoose from "mongoose";
 import productModel from "../models/product.model.js";
 import { uploadToImageKit, uploadMultipleToImageKit } from "../services/imageKit.service.js";
+import { getCache, setCache, clearCachePattern } from "../config/redis.js";
 
 
 // Create a product 
 
 export const createProduct = async (req, res) => {
     try {
-        const { title, description, price, sizes, stock } = req.body;
+        const { title, description, price, sizes, stock, category, subCategory } = req.body;
         const seller = req.user.userId;
 
         const files = req.files || [];
@@ -42,8 +43,13 @@ export const createProduct = async (req, res) => {
             sizes,
             stock,
             seller,
+            category: category || "Shirts (Topwear)",
+            subCategory: subCategory || "Casual & Resort Wear",
             images: finalImages,
         });
+
+        // Invalidate stale Redis product caches so new silhouette displays immediately
+        await clearCachePattern("products:*");
 
         return res.status(201).json({
             success: true,
@@ -102,26 +108,50 @@ export const formatProductAvailability = (product) => {
 };
 
 
-// Get all the products from the DB (public catalog)
-
+// Get all the products from the DB (public catalog with optional category & subcategory filters)
 export const getAllProducts = async (req, res) => {
     try {
-        const products = await productModel.find({ isUnlisted: { $ne: true } });
+        const catKey = req.query.category || "all";
+        const subKey = req.query.subCategory || "all";
+        const searchKey = req.query.search || "";
+        const cacheKey = `products:feed:${catKey}:${subKey}:${searchKey}`.toLowerCase();
 
-        if (!products || products.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "No products found",
-            });
+        // 1. Try Redis Cache first
+        const cachedData = await getCache(cacheKey);
+        if (cachedData) {
+            res.set("X-Cache", "HIT");
+            return res.status(200).json(cachedData);
         }
 
-        const formattedProducts = products.map(formatProductAvailability);
+        const query = { isUnlisted: { $ne: true } };
 
-        return res.status(200).json({
+        if (req.query.category && req.query.category !== "all" && req.query.category !== "All") {
+            const escapedCat = req.query.category.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+            query.category = { $regex: new RegExp(escapedCat, "i") };
+        }
+
+        if (req.query.subCategory && req.query.subCategory !== "all" && req.query.subCategory !== "All") {
+            const escapedSub = req.query.subCategory.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+            query.subCategory = { $regex: new RegExp(escapedSub, "i") };
+        }
+
+        // 2. High-performance lean Mongo query
+        const products = await productModel.find(query).sort({ createdAt: -1 }).lean();
+
+        const formattedProducts = (products || []).map(formatProductAvailability);
+
+        const responsePayload = {
             success: true,
             message: "Products fetched successfully",
+            count: formattedProducts.length,
             products: formattedProducts,
-        });
+        };
+
+        // 3. Store in Redis cache for 3 minutes (180s)
+        await setCache(cacheKey, responsePayload, 180);
+
+        res.set("X-Cache", "MISS");
+        return res.status(200).json(responsePayload);
     } catch (error) {
         return res.status(500).json({
             success: false,
@@ -132,7 +162,6 @@ export const getAllProducts = async (req, res) => {
 
 
 // Get a single product by ID
-
 export const getProductById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -144,7 +173,16 @@ export const getProductById = async (req, res) => {
             });
         }
 
-        const product = await productModel.findById(id);
+        const cacheKey = `products:detail:${id}`;
+
+        // 1. Check Redis Cache
+        const cachedProduct = await getCache(cacheKey);
+        if (cachedProduct) {
+            res.set("X-Cache", "HIT");
+            return res.status(200).json(cachedProduct);
+        }
+
+        const product = await productModel.findById(id).lean();
 
         if (!product || product.isUnlisted) {
             return res.status(404).json({
@@ -153,11 +191,18 @@ export const getProductById = async (req, res) => {
             });
         }
 
-        return res.status(200).json({
+        const formattedProduct = formatProductAvailability(product);
+        const responsePayload = {
             success: true,
             message: "Product fetched successfully",
-            product: formatProductAvailability(product),
-        });
+            product: formattedProduct,
+        };
+
+        // Cache product details for 5 minutes (300s)
+        await setCache(cacheKey, responsePayload, 300);
+
+        res.set("X-Cache", "MISS");
+        return res.status(200).json(responsePayload);
     } catch (error) {
         return res.status(500).json({
             success: false,
@@ -226,6 +271,9 @@ export const unlistProduct = async (req, res) => {
         product.isUnlisted = true;
         await product.save();
 
+        // Invalidate Redis product caches
+        await clearCachePattern("products:*");
+
         return res.status(200).json({
             success: true,
             message: "Product unlisted successfully",
@@ -273,6 +321,9 @@ export const listProduct = async (req, res) => {
 
         product.isUnlisted = false;
         await product.save();
+
+        // Invalidate Redis product caches
+        await clearCachePattern("products:*");
 
         return res.status(200).json({
             success: true,

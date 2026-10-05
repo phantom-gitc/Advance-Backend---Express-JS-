@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { authenticate, authorizeSeller } from "../middleware/auth.middleware.js";
+import { authenticate, authorizeSeller, optionalAuthenticate } from "../middleware/auth.middleware.js";
+import { writeLimiter } from "../middleware/rateLimiter.middleware.js";
 import {
     createProduct,
     getAllProducts,
@@ -19,6 +20,8 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
+// Define upload middleware with file size and count limits for product images
+
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
@@ -27,11 +30,14 @@ const upload = multer({
     },
     fileFilter,
 });
-
+ 
 const router = Router();
 
+// Create a product  
+    
 router.post(
     "/",
+    writeLimiter,
     authenticate,
     authorizeSeller,
     upload.array("images", 5),
@@ -46,7 +52,7 @@ router.post(
                     } catch {
                         const num = Number(price);
                         if (!isNaN(num)) {
-                            req.body.price = { amount: num, currency: "INR" };
+                            req.body.price = { amount: num, currency: "USD" };
                         }
                     }
                 }
@@ -82,6 +88,13 @@ router.post(
                 }
             }
 
+            if (req.body.category && typeof req.body.category === "string") {
+                req.body.category = req.body.category.trim();
+            }
+            if (req.body.subCategory && typeof req.body.subCategory === "string") {
+                req.body.subCategory = req.body.subCategory.trim();
+            }
+
             const bodyImages = Array.isArray(req.body.images)
                 ? req.body.images
                 : req.body.images
@@ -105,11 +118,11 @@ router.post(
 // Seller dashboard: A seller can list/view all their products on the dashboard (Requirement 8)
 router.get("/seller/dashboard", authenticate, authorizeSeller, getSellerProducts);
 
-// Read all the products from the DB (public catalog)
-router.get("/", authenticate, getAllProducts);
+// Read all the products from the DB (public catalog with optional user authentication)
+router.get("/", optionalAuthenticate, getAllProducts);
 
 // Read a single product by ID (public view with size availability)
-router.get("/:id", authenticate, getProductById);
+router.get("/:id", optionalAuthenticate, getProductById);
 
 // Unlist a product (Requirement 7)
 router.patch("/unlist/:id", authenticate, authorizeSeller, unlistProduct);

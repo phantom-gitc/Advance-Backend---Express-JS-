@@ -2,10 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 
-if(!process.env.PORT){
-    throw new Error("PORT is not defined ❌");
-}
-
+const port = process.env.PORT || 5000;
 
 if(!process.env.MONGODB_URL){
     throw new Error("MONGODB_URL is not defined ❌");
@@ -20,7 +17,9 @@ if(!process.env.REFRESH_TOKEN_SECRET){
 }
 
 const Config = {
-    PORT: process.env.PORT,
+    PORT: port,
+    NODE_ENV: process.env.NODE_ENV || "development",
+    FRONTEND_URL: process.env.FRONTEND_URL || "",
     MONGODB_URL: process.env.MONGODB_URL,
     ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
     REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,

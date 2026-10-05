@@ -9,6 +9,21 @@ import {
 import jwt from "jsonwebtoken";
 import Config from "../config/config.js";
 
+const isProduction = process.env.NODE_ENV === "production";
+
+export const getCookieOptions = () => ({
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: isProduction ? "none" : "lax",
+  maxAge: 1000 * 60 * 60 * 24 * 7,
+});
+
+export const getClearCookieOptions = () => ({
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: isProduction ? "none" : "lax",
+});
+
 // Register controller
 
 export const registerController = async (req, res) => {
@@ -60,12 +75,7 @@ export const registerController = async (req, res) => {
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
 
     // set refresh token in cookie
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-    });
+    res.cookie("refreshToken", refreshToken, getCookieOptions());
 
     // save hashed refresh token in user object
     await userModel.findByIdAndUpdate(user._id, {
@@ -146,12 +156,7 @@ export const loginController = async (req, res) => {
     refreshToken: hashedRefreshToken,
   });
 
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-    maxAge: 1000 * 60 * 60 * 24 * 7,
-  });
+  res.cookie("refreshToken", refreshToken, getCookieOptions());
 
   return res.status(200).json({
     message: "User logged in successfully",
@@ -168,7 +173,7 @@ export const loginController = async (req, res) => {
   });
 };
 
-// Refresh Controller
+// Refresh Controller 
 
 export const refreshController = async (req, res) => {
   const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
@@ -225,11 +230,7 @@ export const refreshController = async (req, res) => {
     if (!isTokenMatching) {
       await userModel.findByIdAndUpdate(user._id, { refreshToken: null });
 
-      res.clearCookie("refreshToken", {
-        httpOnly: true,
-        secure: true,
-        sameSite: "strict",
-      });
+      res.clearCookie("refreshToken", getClearCookieOptions());
 
       return res.status(401).json({
         message: "Unauthorized ❌",
@@ -258,12 +259,7 @@ export const refreshController = async (req, res) => {
       refreshToken: hashedNewRefreshToken,
     });
 
-    res.cookie("refreshToken", newRefreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-    });
+    res.cookie("refreshToken", newRefreshToken, getCookieOptions());
 
     return res.status(200).json({
       message: "Token refreshed successfully",
@@ -311,6 +307,36 @@ export const getMe = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Logout controller
+export const logoutController = async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+
+    if (refreshToken) {
+      try {
+        const decodeToken = readRefreshToken(refreshToken);
+        const userId =
+          decodeToken?.id?.userId || decodeToken?.id || decodeToken?.userId;
+        if (userId) {
+          await userModel.findByIdAndUpdate(userId, { refreshToken: null });
+        }
+      } catch (e) {
+        // Token could already be expired or invalid, still clear cookie
+      }
+    }
+
+    res.clearCookie("refreshToken", getClearCookieOptions());
+
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

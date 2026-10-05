@@ -29,8 +29,8 @@ const productSchema = new mongoose.Schema(
       currency: {
         type: String,
         required: true,
-        enum: ["INR", "USD", "EUR"],
-        default: "INR",
+        enum: ["USD", "INR", "EUR"],
+        default: "USD",
       },
     },
 
@@ -80,6 +80,20 @@ const productSchema = new mongoose.Schema(
       },
     },
 
+    category: {
+      type: String,
+      trim: true,
+      default: "Shirts (Topwear)",
+      index: true,
+    },
+
+    subCategory: {
+      type: String,
+      trim: true,
+      default: "Casual & Resort Wear",
+      index: true,
+    },
+
     isUnlisted: {
       type: Boolean,
       default: false,
@@ -89,6 +103,11 @@ const productSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+// High-performance compound indexes for catalog browsing and seller dashboard
+productSchema.index({ isUnlisted: 1, createdAt: -1 });
+productSchema.index({ isUnlisted: 1, category: 1, subCategory: 1, createdAt: -1 });
+productSchema.index({ seller: 1, createdAt: -1 });
 
 const productModel = mongoose.model("product", productSchema);
 
