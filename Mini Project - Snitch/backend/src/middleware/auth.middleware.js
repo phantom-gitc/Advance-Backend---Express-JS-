@@ -45,3 +45,14 @@ export function authenticate(req, res, next) {
       .json({ message: "Invalid or Expired Access Token ❌" });
   }
 }
+
+// Middleware to authorize seller role (returns 403 if user is not a seller)
+export function authorizeSeller(req, res, next) {
+  if (!req.user || req.user.role !== "seller") {
+    return res.status(403).json({
+      success: false,
+      message: "You are not authorized to perform this action",
+    });
+  }
+  next();
+}

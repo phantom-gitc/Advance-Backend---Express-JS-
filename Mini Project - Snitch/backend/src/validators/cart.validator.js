@@ -2,7 +2,7 @@ import { body, validationResult } from "express-validator";
 
 // Allowed sizes matching Product & Cart models 
 
-const ALLOWED_SIZES = ["S", "M", "L", "XL", "XXL"];
+const ALLOWED_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 
 // Reusable validation result handler middleware
 

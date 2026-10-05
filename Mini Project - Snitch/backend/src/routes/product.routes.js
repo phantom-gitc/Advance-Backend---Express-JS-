@@ -1,6 +1,13 @@
 import { Router } from "express";
-import { authenticate } from "../middleware/auth.middleware.js";
-import { createProduct, getAllProducts } from "../controller/product.controller.js";
+import { authenticate, authorizeSeller } from "../middleware/auth.middleware.js";
+import {
+    createProduct,
+    getAllProducts,
+    getProductById,
+    getSellerProducts,
+    unlistProduct,
+    listProduct,
+} from "../controller/product.controller.js";
 import multer from "multer";
 import { createProductValidator } from "../validators/product.validator.js";
 
@@ -26,15 +33,7 @@ const router = Router();
 router.post(
     "/",
     authenticate,
-    (req, res, next) => {
-        if (req.user.role !== "seller") {
-            return res.status(403).json({
-                success: false,
-                message: "You are not authorized to perform this action",
-            });
-        }
-        next();
-    },
+    authorizeSeller,
     upload.array("images", 5),
     (req, res, next) => {
         try {
@@ -83,7 +82,12 @@ router.post(
                 }
             }
 
-            req.body.images = req.files;
+            const bodyImages = Array.isArray(req.body.images)
+                ? req.body.images
+                : req.body.images
+                ? [req.body.images]
+                : [];
+            req.body.images = [...(req.files || []), ...bodyImages];
             req.body.seller = req.user.userId;
 
             next();
@@ -98,8 +102,19 @@ router.post(
     createProductValidator, createProduct
 );
 
-// Read all the products from the DB
+// Seller dashboard: A seller can list/view all their products on the dashboard (Requirement 8)
+router.get("/seller/dashboard", authenticate, authorizeSeller, getSellerProducts);
 
-
+// Read all the products from the DB (public catalog)
 router.get("/", authenticate, getAllProducts);
+
+// Read a single product by ID (public view with size availability)
+router.get("/:id", authenticate, getProductById);
+
+// Unlist a product (Requirement 7)
+router.patch("/unlist/:id", authenticate, authorizeSeller, unlistProduct);
+
+// Re-list a product
+router.patch("/list/:id", authenticate, authorizeSeller, listProduct);
+
 export default router;

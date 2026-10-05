@@ -16,10 +16,10 @@ export const addToCart = async (req, res) => {
         // Check If product Exist Or Not 
         const product = await productModel.findById(productId);
 
-        // If product not exist throw error 
-        if (!product) {
+        // If product not exist or is unlisted throw error 
+        if (!product || product.isUnlisted) {
             return res.status(404).json({
-                message: "Product Not Found"
+                message: "Product Not Found or has been unlisted"
             });
         }
 
@@ -33,10 +33,26 @@ export const addToCart = async (req, res) => {
             });
         }
 
-        // Check If Stock Exist Or Not 
-        if (product.stock < quantity) {
+        // Check size-specific stock if configured, otherwise overall stock
+        let availableStock = product.stock;
+        if (Array.isArray(product.sizeStock) && product.sizeStock.length > 0) {
+            const sizeStockEntry = product.sizeStock.find((s) => s.size === size);
+            if (sizeStockEntry) {
+                availableStock = sizeStockEntry.stock;
+            }
+        }
+
+        // Check if size is currently out of stock (Requirement 6)
+        if (availableStock <= 0) {
             return res.status(400).json({
-                message: "Out Of Stock"
+                message: `Size ${size} is currently Unavailable (out of stock)`
+            });
+        }
+
+        // Check If Stock Exist Or Not 
+        if (availableStock < quantity) {
+            return res.status(400).json({
+                message: `Insufficient Stock. Available Stock : ${availableStock}`
             });
         }
 
@@ -59,9 +75,9 @@ export const addToCart = async (req, res) => {
         // If item already exist, update quantity
         if (productInCart) {
 
-            if (productInCart.quantity + quantity > product.stock) {
+            if (productInCart.quantity + quantity > availableStock) {
                 return res.status(400).json({
-                    message: `Insufficient Stock. Available Stock : ${product.stock}`
+                    message: `Insufficient Stock. Available Stock : ${availableStock}`
                 });
             }
 
@@ -124,6 +140,137 @@ export const getCart = async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             message: error.message || "Internal Server Error"
+        });
+    }
+};
+
+
+// Update Cart Item Quantity Controller 
+
+export const updateCartItem = async (req, res) => {
+    try {
+        const { productId, size, quantity } = req.body;
+        const userId = req.user.userId || req.user._id;
+
+        const cart = await cartModel.findOne({ user: userId });
+
+        if (!cart) {
+            return res.status(404).json({
+                message: "Cart Not Found",
+            });
+        }
+
+        const productInCart = cart.products.find(
+            (item) => item.product.toString() === productId && item.size === size
+        );
+
+        if (!productInCart) {
+            return res.status(404).json({
+                message: "Item not found in cart",
+            });
+        }
+
+        // Verify product & available stock
+        const product = await productModel.findById(productId);
+        if (!product || product.isUnlisted) {
+            return res.status(404).json({
+                message: "Product Not Found or has been unlisted",
+            });
+        }
+
+        let availableStock = product.stock;
+        if (Array.isArray(product.sizeStock) && product.sizeStock.length > 0) {
+            const sizeStockEntry = product.sizeStock.find((s) => s.size === size);
+            if (sizeStockEntry) {
+                availableStock = sizeStockEntry.stock;
+            }
+        }
+
+        if (quantity > availableStock) {
+            return res.status(400).json({
+                message: `Insufficient Stock. Available Stock : ${availableStock}`,
+            });
+        }
+
+        productInCart.quantity = quantity;
+        await cart.save();
+
+        return res.status(200).json({
+            message: "Cart Item Updated Successfully",
+            cart,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message || "Internal Server Error",
+        });
+    }
+};
+
+
+// Remove Item from Cart Controller 
+
+export const removeFromCart = async (req, res) => {
+    try {
+        const { productId, size } = req.body;
+        const userId = req.user.userId || req.user._id;
+
+        const cart = await cartModel.findOne({ user: userId });
+
+        if (!cart) {
+            return res.status(404).json({
+                message: "Cart Not Found",
+            });
+        }
+
+        const initialLength = cart.products.length;
+        cart.products = cart.products.filter(
+            (item) => !(item.product.toString() === productId && item.size === size)
+        );
+
+        if (cart.products.length === initialLength) {
+            return res.status(404).json({
+                message: "Item not found in cart",
+            });
+        }
+
+        await cart.save();
+
+        return res.status(200).json({
+            message: "Item Removed from Cart Successfully",
+            cart,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message || "Internal Server Error",
+        });
+    }
+};
+
+
+// Clear Cart Controller 
+
+export const clearCart = async (req, res) => {
+    try {
+        const userId = req.user.userId || req.user._id;
+
+        const cart = await cartModel.findOne({ user: userId });
+
+        if (!cart) {
+            return res.status(404).json({
+                message: "Cart Not Found",
+            });
+        }
+
+        cart.products = [];
+        await cart.save();
+
+        return res.status(200).json({
+            message: "Cart Cleared Successfully",
+            cart,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message || "Internal Server Error",
         });
     }
 };

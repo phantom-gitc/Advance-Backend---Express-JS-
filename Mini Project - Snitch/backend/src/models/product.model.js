@@ -37,9 +37,23 @@ const productSchema = new mongoose.Schema(
     sizes: {
       type: [String],
       required: true,
-      enum: ["S", "M", "L", "XL", "XXL"],
+      enum: ["XS", "S", "M", "L", "XL", "XXL"],
       default: ["M"],
     },
+
+    sizeStock: [
+      {
+        size: {
+          type: String,
+          enum: ["XS", "S", "M", "L", "XL", "XXL"],
+        },
+        stock: {
+          type: Number,
+          default: 0,
+          min: 0,
+        },
+      },
+    ],
 
     stock: {
       type: Number,
@@ -64,6 +78,11 @@ const productSchema = new mongoose.Schema(
         },
         message: "A maximum of 5 images can be stored",
       },
+    },
+
+    isUnlisted: {
+      type: Boolean,
+      default: false,
     },
   },
   {

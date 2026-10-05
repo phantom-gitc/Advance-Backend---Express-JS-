@@ -49,10 +49,10 @@ export const createProductValidator = [
         .withMessage("Sizes must be a non-empty array")
         .bail()
         .custom((sizes) => {
-            const validSizes = ["S", "M", "L", "XL", "XXL"];
+            const validSizes = ["XS", "S", "M", "L", "XL", "XXL"];
             return sizes.every((size) => validSizes.includes(size));
         })
-        .withMessage("Invalid size. Allowed sizes are: S, M, L, XL, XXL"),
+        .withMessage("Invalid size. Allowed sizes are: XS, S, M, L, XL, XXL"),
 
     body("stock")
         .notEmpty()
@@ -133,10 +133,10 @@ export const updateProductValidator = [
         .withMessage("Sizes must be a non-empty array")
         .bail()
         .custom((sizes) => {
-            const validSizes = ["S", "M", "L", "XL", "XXL"];
+            const validSizes = ["XS", "S", "M", "L", "XL", "XXL"];
             return sizes.every((size) => validSizes.includes(size));
         })
-        .withMessage("Invalid size. Allowed sizes are: S, M, L, XL, XXL"),
+        .withMessage("Invalid size. Allowed sizes are: XS, S, M, L, XL, XXL"),
 
     body("stock")
         .optional()
