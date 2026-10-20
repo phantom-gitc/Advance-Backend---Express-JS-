@@ -21,6 +21,8 @@ export const registerUser = async (req, res) => {
     }
 
     const existingUser = await userModel.findOne({ email: email.toLowerCase() });
+
+    
     if (existingUser) {
       return res.status(409).json({
         message: "An account with this email already exists",
