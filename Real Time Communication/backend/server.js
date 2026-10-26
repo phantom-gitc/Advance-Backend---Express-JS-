@@ -17,14 +17,6 @@ const io = socketServer(httpServer);
 
 // Handle socket connections 
 
-io.on("connection", (socket) => {
-    console.log("A user connected");
-});
-
-io.on("disconnect", (socket) => {
-    console.log("A user disconnected");
-});
-
 
 
 // Start server
