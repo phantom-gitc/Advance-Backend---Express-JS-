@@ -1,0 +1,2 @@
+make a folder named controllers and inside write user.controller.js with an express controller
+/exit
